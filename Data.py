@@ -47,10 +47,15 @@ def prepare_test_data(test_csv, test_y_csv):
     y_test = [[value] for value in y_test]
     return [x_test, y_test]
 
-def get_data(train_csv, test_csv, test_y_csv):
+def get_train_val_test(train_csv, test_csv, test_y_csv):
     train_data = prepare_train_data(train_csv)
     x_train, x_val, y_train, y_val = train_test_split(*train_data, test_size=0.2)
     train_data = [x_train, y_train]
     val_data = [x_val, y_val]
     test_data = prepare_test_data(test_csv, test_y_csv)
     return [train_data, val_data, test_data]
+
+def get_train_test(train_csv, test_csv, test_y_csv):
+    train_data = prepare_train_data(train_csv)
+    test_data = prepare_test_data(test_csv, test_y_csv)
+    return [train_data, test_data]
