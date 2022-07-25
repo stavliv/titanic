@@ -1,64 +1,15 @@
 import torch
-from torch import nn
-import torch.optim as optim
-from data_loader import DataLoader
-from itertools import product
-from data import get_train_val_test
-from plot import plot_learning_curve, plot_learning_curves
-from sklearn.model_selection import StratifiedKFold
-from metrics import binary_accuracy
-
-batch_size = 32
-EPOCHS = 100
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-def k_fold(train_data):
-    train_data[0] = torch.tensor(train_data[0])
-    train_data[1] = torch.tensor(train_data[1])
-    skf = StratifiedKFold(n_splits=5)
-    (train_indices, val_indices) = skf.split(train_data[0], train_data[1])
-    train = [train_data[0][[train_indices]], train_data[1][train_indices]]
-    val = [train_data[0][val_indices], train_data[1][val_indices]]
-    train_dataloader = DataLoader(train, batch_size)
-    val_dataloader = DataLoader(val, batch_size)
-    return train_dataloader, val_dataloader
-
-def tune(hypers):
-    train_data, val_data, test_data = get_train_val_test("train.csv", "test.csv", "gender_submission.csv")
-    
-    train_dataloader = DataLoader(train_data, batch_size)
-    val_dataloader = DataLoader(val_data, batch_size)
-    test_dataloader = DataLoader(test_data, batch_size)
-
-    min_val_loss = float("inf")
-    for i,hyper_set in enumerate(hypers):
-            lr = hyper_set[0]
-            nh = hyper_set[1]
-
-            model = nn.Sequential(nn.Linear(len(train_data[0][0]), nh), nn.ReLU(), nn.Linear(nh, 1))
-            optimizer = optim.Adam(model.parameters(), lr=lr)
-            criterion = nn.BCEWithLogitsLoss()
-            metric_funcs = {'accuracy': binary_accuracy}
-            neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs, f"{lr}_{nh}")
-            neural_net.fit(train_dataloader, val_dataloader)
-            #save best model
-            if neural_net.best_model_dict['validation_loss'] < min_val_loss:
-                min_val_loss = neural_net.best_model_dict['validation_loss']
-                best_model_dict = neural_net.best_model_dict.copy()
-                best_model_dict['learning_rate'] = lr
-                best_model_dict['neurons_hidden'] = nh
-                torch.save(best_model_dict, 'best_model.pth')
-
+from plot import plot_learning_curve
 
 class NeuralNetwork():
-    def __init__(self, criterion, optimizer, model, metric_funcs, tag):
+    def __init__(self, criterion, optimizer, model, metric_funcs, device, tag):
         self.criterion = criterion
         self.optimizer = optimizer
         self.model = model
         self.metric_funcs = metric_funcs
+        self.device = device
         self.tag = tag
         self.best_model_dict = None
-        self.input_size = len(train_data[0][0]) 
 
     def train(self, dataloader):
         train_metrics = dict(zip(self.metric_funcs.keys(), [0.0 for _ in range(len(self.metric_funcs.keys()))]))
@@ -67,7 +18,7 @@ class NeuralNetwork():
 
         self.model.train()
         for xb, yb in dataloader:
-            xb, yb = xb.to(device), yb.to(device)
+            xb, yb = xb.to(self.device), yb.to(self.device)
             
             y_hat = self.model(xb)
             loss = self.criterion(y_hat, yb)
@@ -93,7 +44,7 @@ class NeuralNetwork():
         self.model.eval()
         with torch.no_grad():
             for xb, yb in dataloader:
-                xb, yb = xb.to(device), yb.to(device)
+                xb, yb = xb.to(self.device), yb.to(self.device)
 
                 y_hat = self.model(xb)
                 loss = self.criterion(y_hat, yb)
@@ -108,15 +59,15 @@ class NeuralNetwork():
             eval_metrics[key] = eval_metrics[key] / samples
         return eval_loss, eval_metrics
 
-    def fit(self, train_dataloader, val_dataloader):
-        train_loss = torch.empty(EPOCHS)
-        train_metrics = dict(zip(self.metric_funcs.keys(), [torch.empty(EPOCHS) for _ in range(len(self.metric_funcs.keys()))]))
-        val_loss = torch.empty(EPOCHS)
-        val_metrics = dict(zip(self.metric_funcs.keys(), [torch.empty(EPOCHS) for _ in range(len(self.metric_funcs.keys()))]))
+    def fit(self, train_dataloader, val_dataloader, epochs):
+        train_loss = torch.empty(epochs)
+        train_metrics = dict(zip(self.metric_funcs.keys(), [torch.empty(epochs) for _ in range(len(self.metric_funcs.keys()))]))
+        val_loss = torch.empty(epochs)
+        val_metrics = dict(zip(self.metric_funcs.keys(), [torch.empty(epochs) for _ in range(len(self.metric_funcs.keys()))]))
 
         min_val_loss = float('inf')
 
-        for epoch in range(EPOCHS):
+        for epoch in range(epochs):
             train = self.train(train_dataloader)
             val = self.evaluate(val_dataloader)
             #save metrics
@@ -144,31 +95,3 @@ class NeuralNetwork():
             plot_learning_curve(training_res=train_metrics[key], validation_res=val_metrics[key], metric=key, title=self.tag, filename=f'{self.tag}_{key}.png')
 
         return train_loss, train_metrics
-
-if __name__ == '__main__':   
-    train_data, val_data, test_data = get_train_val_test("train.csv", "test.csv", "gender_submission.csv")
-    train_dataloader = DataLoader(train_data, batch_size)
-    val_dataloader = DataLoader(val_data, batch_size)
-    test_dataloader = DataLoader(test_data, batch_size)
-    
-    learning_rate = [0.0001, 0.001, 0.01]
-    neurons_hidden = [7, 4]
-    hypers = product(learning_rate, neurons_hidden)
-    #tune(hypers)
-    #test best model
-    best_model = torch.load('best_model.pth')
-    best_model_epoch = best_model['epoch']
-    print(f"Best model was saved at\n\
-            epochs: {best_model_epoch} \n\
-            neurons hidden: {best_model['neurons_hidden']}\n\
-            learning rate: {best_model['learning_rate']}"
-        )
-    model = nn.Sequential(nn.Linear(len(train_data[0][0]), best_model['neurons_hidden']), nn.ReLU(), nn.Linear(best_model['neurons_hidden'], 1))
-    model.load_state_dict(best_model['model_state_dict'])
-    model = model.to(device)
-    optimizer = optim.Adam(model.parameters(), lr=best_model['learning_rate'])
-    criterion = nn.BCEWithLogitsLoss()
-    metric_funcs = {'accuracy': binary_accuracy}
-    neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs, train_data, val_data, test_data)
-    metrics = neural_net.evaluate(test_dataloader)
-    print(f'loss: {metrics[0]} metrics: {metrics[1]}')
