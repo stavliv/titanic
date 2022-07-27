@@ -31,7 +31,7 @@ def tune(hypers, train_data):
 
             model = nn.Sequential(nn.Linear(len(train_data[0][0]), nh), nn.ReLU(), nn.Linear(nh, 1))
             optimizer = optim.Adam(model.parameters(), lr=lr) 
-            neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs, f"{lr}_{nh}")
+            neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs, device, f"{lr}_{nh}")
             cur_performance = neural_net.fit(train_dataloader, val_dataloader, EPOCHS)
 
             for key,value in cur_performance['validation'].items():
