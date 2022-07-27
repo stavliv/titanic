@@ -94,4 +94,4 @@ class NeuralNetwork():
         for key in self.metric_funcs.keys():
             plot_learning_curve(training_res=train_metrics[key], validation_res=val_metrics[key], metric=key, title=self.tag, filename=f'{self.tag}_{key}.png')
 
-        return train_loss, train_metrics
+        return {'train': {'loss': train_loss, **train_metrics}, 'validation': {'loss': val_loss, **val_metrics}}

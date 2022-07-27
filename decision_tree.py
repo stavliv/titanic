@@ -1,6 +1,6 @@
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from data import get_data
+from data import get_train_val_test, get_train_test
 from sklearn.metrics import accuracy_score
 
 def decision_tree(train_data, test_data):
@@ -16,6 +16,6 @@ def random_forest(train_data, test_data):
     print(f'Test set accuracy: {accuracy_score(test_data[1], rfc_pred_train)}')
 
 if __name__ == '__main__':
-    train_data, val_data, test_data = get_data("train.csv", "test.csv", "gender_submission.csv")
+    train_data, test_data = get_train_test("train.csv", "test.csv", "gender_submission.csv")
     #decision_tree(train_data, test_data)
     random_forest(train_data, test_data)

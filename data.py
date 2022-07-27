@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from numpy import nanmean
 from sklearn.model_selection import train_test_split
+import torch
 
 def prepare_data(csv):
     data = pd.read_csv(csv)
@@ -34,6 +35,8 @@ def prepare_train_data(train_csv):
     normalized_x=(x-x.mean())/x.std()
     x_train = normalized_x.values
     x_train = x_train.astype(np.float32)
+    x_train = torch.tensor(x_train)
+    y_train = torch.tensor(y_train)
     return [x_train, y_train]
 
 def prepare_test_data(test_csv, test_y_csv):
@@ -45,6 +48,8 @@ def prepare_test_data(test_csv, test_y_csv):
     y_test = y.Survived.values
     y_test = y_test.astype(np.float32)
     y_test = [[value] for value in y_test]
+    x_test = torch.tensor(x_test)
+    y_test = torch.tensor(y_test)
     return [x_test, y_test]
 
 def get_train_val_test(train_csv, test_csv, test_y_csv):
