@@ -77,7 +77,7 @@ neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs)
 metrics = neural_net.evaluate(test_dataloader)
 print(f'loss: {metrics[0]} metrics: {metrics[1]}')
 
-
+#best cross validation model
 min_loss = float('inf')
 for hyper_set in hypers:
     val_performance[hyper_set]['loss'] = list(val_performance[hyper_set]['loss'])
