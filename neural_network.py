@@ -57,7 +57,7 @@ class NeuralNetwork():
         eval_loss = eval_loss / samples
         for key in self.metric_funcs:
             eval_metrics[key] = eval_metrics[key] / samples
-        return eval_loss, eval_metrics
+        return {'loss': eval_loss, **eval_metrics}
 
     def fit(self, train_dataloader, val_dataloader, epochs):
         train_loss = torch.empty(epochs)
@@ -84,10 +84,8 @@ class NeuralNetwork():
                         'epoch': epoch+1,
                         'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict': self.optimizer.state_dict(),
-                        'training_loss': train[0],
-                        'training_metrics': train[1],
-                        'validation_loss': val[0],
-                        'validation_metrics': val[1]
+                        'training_metrics': {'loss': train[0], **train[1]},
+                        'validation_metrics': {'loss': val[0], **val[1]}
                         }
         #plot learning curves                     
         plot_learning_curve(training_res=train_loss, validation_res=val_loss, metric='loss', title=self.tag, filename=f'{self.tag}_loss.png')
