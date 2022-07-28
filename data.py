@@ -53,6 +53,26 @@ def prepare_test_data(test_csv, test_y_csv):
     return [x_test, y_test]
 
 def get_train_val_test(train_csv, test_csv, test_y_csv):
+    '''
+    splits the data in train, validation, test
+
+    Parameters
+    ----------
+    train_csv : csv file
+        features and labels of training examples
+    test_csv : csv file
+        features of test examples
+    test_y_csv : csv file
+        labels of test examples
+        
+    Returns
+    -------
+    list
+        the train, test and validation data in the form [train_data, val_data, test_data], 
+        each in the form [inputs, labels], 
+        inputs = torch.Tensor(shape=(#examples, #input featurs)),
+        labels = torch.Tensor(shape=(#examples, #output features))
+    '''
     train_data = prepare_train_data(train_csv)
     x_train, x_val, y_train, y_val = train_test_split(*train_data, test_size=0.2)
     train_data = [x_train, y_train]
@@ -61,6 +81,26 @@ def get_train_val_test(train_csv, test_csv, test_y_csv):
     return [train_data, val_data, test_data]
 
 def get_train_test(train_csv, test_csv, test_y_csv):
+    '''
+    splits the data in train, test
+
+    Parameters
+    ----------
+    train_csv : csv file
+        features and labels of training examples
+    test_csv : csv file
+        features of test examples
+    test_y_csv : csv file
+        labels of test examples
+        
+    Returns
+    -------
+    list
+        the train and test data in the form [train_data, test_data], 
+        each in the form [inputs, labels], 
+        inputs = torch.Tensor(shape=(#examples, #input featurs)),
+        labels = torch.Tensor(shape=(#examples, #output features))
+    '''
     train_data = prepare_train_data(train_csv)
     test_data = prepare_test_data(test_csv, test_y_csv)
     return [train_data, test_data]

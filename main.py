@@ -29,7 +29,7 @@ def tune(hypers, train_data, criterion, metric_funcs):
 
             model = nn.Sequential(nn.Linear(len(train_data[0][0]), nh), nn.ReLU(), nn.Linear(nh, 1))
             optimizer = optim.Adam(model.parameters(), lr=lr) 
-            neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs, device, f"{lr}_{nh}")
+            neural_net = NeuralNetwork(model, optimizer, criterion, metric_funcs, device, f"{lr}_{nh}")
             cur_performance = neural_net.fit(train_dataloader, val_dataloader, EPOCHS)
 
             for metric,metric_tensor in cur_performance['validation'].items():
@@ -69,12 +69,13 @@ def test_best_model(test_dataloader, criterion, metric_funcs):
     model.load_state_dict(best_model['model_state_dict'])
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=best_model['learning_rate'])
-    neural_net = NeuralNetwork(criterion, optimizer, model, metric_funcs, device, 'best')
+    neural_net = NeuralNetwork(model, optimizer, criterion, metric_funcs, device, 'best')
     metrics = neural_net.evaluate(test_dataloader)
+    metrics_dict = {'loss': metrics[0], **metrics[1]}
     print(
         f'\n\
             ---Test metrics---\n\
-            {metrics}'
+            {metrics_dict}'
         )
 
 def find_best_cross_model():

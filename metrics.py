@@ -1,6 +1,6 @@
 import torch
 
-def binary_accuracy(y_hat: torch.Tensor, y: torch.Tensor, threshold=0.5):
+def binary_accuracy(y_hat: torch.Tensor, y: torch.Tensor, threshold=0.5) -> float:
     '''
     Parameters
     ----------
@@ -8,7 +8,7 @@ def binary_accuracy(y_hat: torch.Tensor, y: torch.Tensor, threshold=0.5):
         1d prdeictions tensor
     y : torch.Tensor
         1d labels tensor
-    threshold: float
+    threshold : float
         values larger or equal to threshold are consider 1., others 0.
         
     Returns
