@@ -33,13 +33,13 @@ def tune(hypers, train_data, criterion, metric_funcs):
             cur_performance = neural_net.fit(train_dataloader, val_dataloader, EPOCHS)
 
             for metric,metric_tensor in cur_performance['validation'].items():
-                if metric not in val_performance[hyper_set].metrics():
+                if metric not in val_performance[hyper_set].keys():
                     val_performance[hyper_set][metric] = metric_tensor
                 else:
                     val_performance[hyper_set][metric] = val_performance[hyper_set][metric] + (1 / (fold+1)) * (metric_tensor - val_performance[hyper_set][metric])
             #save best model
-            if neural_net.best_model_dict['validation_loss'] < min_val_loss:
-                min_val_loss = neural_net.best_model_dict['validation_loss']
+            if neural_net.best_model_dict['validation_metrics']['loss'] < min_val_loss:
+                min_val_loss = neural_net.best_model_dict['validation_metrics']['loss']
                 best_model_dict = neural_net.best_model_dict.copy()
                 best_model_dict['learning_rate'] = lr
                 best_model_dict['neurons_hidden'] = nh
